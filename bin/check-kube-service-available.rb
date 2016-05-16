@@ -73,20 +73,9 @@ class AllServicesUp < Sensu::Plugins::Kubernetes::CLI
       next unless all_services || service_list.include?(service_name)
       service_list.delete(service_name)
 
-      service_ok = if service.spec.selector.nil?
-                     # Selector-less services rely on manually set endpoints,
-                     # so we will verify that at least one endpoint exists.
-                     endpoint_available?(service)
-                   else
-                     # Services with selectors should have pods at the backend,
-                     # so we will verify those pod(s) are running
-                     # (or pending withing the time limit)
-                     pod_available?(service)
-                     # TODO: Should we just rely on kubernetes endpoint management as
-                     # pods pass/fail their readiness checks and just check the endpoints?
-                   end
-
-      failed_services << service_name unless service_ok
+      unless endpoint_available?(service)
+        failed_services << "#{service.metadata.namespace}:#{service_name}"
+      end
 
       # Exit early if we've checked all the services we were explicitly asked to
       break if !all_services && service_list.empty?
@@ -113,34 +102,6 @@ class AllServicesUp < Sensu::Plugins::Kubernetes::CLI
 
   def endpoint_available?(service)
     !client.get_endpoint(service.metadata.name, service.metadata.namespace).empty?
-  rescue KubeException
-    # TODO: log?
-    false
-  end
-
-  def pod_available?(service)
-    pod_available = false
-    selector = service.spec.selector.to_h.map { |k, v| "#{k}=#{v}" }.join(',')
-    client.get_pods(label_selector: selector).each do |pod|
-      case pod.status.phase
-      when 'Pending'
-        next if pod.status.startTime.nil?
-        if (Time.now - Time.parse(pod.status.startTime)).to_i < config[:pendingTime]
-          pod_available = true
-          break # out of client pod loop
-        end
-      when 'Running'
-        pod.status.conditions.each do |condition|
-          next unless condition.type == 'Ready'
-          if condition.status == 'True'
-            pod_available = true
-            break # out of condition loop
-          end
-        end
-        break if pod_available # out of client pod loop
-      end
-    end
-    pod_available
   rescue KubeException
     # TODO: log?
     false
