@@ -6,6 +6,10 @@ This CHANGELOG follows the format listed at [Keep A Changelog](http://keepachang
 ## [Unreleased]
 - check-kube-service-available.rb: Allow checking of all services by default. Services without a selector will be checked for an  endpoint.
 
+## [0.1.1] - 2016-05-17
+### Fixed
+- cli.rb: Fixed typo in critical call
+
 ## [0.1.0] - 2016-05-15
 ### Added
 - Added flag to ignore namespaces in check-kube-pods-pending
@@ -27,5 +31,6 @@ This CHANGELOG follows the format listed at [Keep A Changelog](http://keepachang
 ### Added
 - initial release
 
-[Unreleased]: https://github.com/sensu-plugins/sensu-plugins-kubernetes/compare/0.0.1...HEAD
+[Unreleased]: https://github.com/sensu-plugins/sensu-plugins-kubernetes/compare/0.1.1...HEAD
+[0.1.1]: https://github.com/sensu-plugins/sensu-plugins-kubernetes/compare/0.1.0...0.1.1
 [0.1.0]: https://github.com/sensu-plugins/sensu-plugins-kubernetes/compare/0.0.1...0.1.0
